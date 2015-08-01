@@ -1,5 +1,5 @@
 // JavaScript Document
-var db = openDatabase('tomorrowland_2015_bands_db', '1.0', 'bands db', 2 * 1024 * 1024);
+var db = openDatabase('wacken_2015_bands_db', '1.0', 'bands db', 2 * 1024 * 1024);
 var total_stages =0;
 var day_arr=[];
 var day_name_arr=[];
@@ -366,7 +366,8 @@ function set_up_main_page(){
 									
 									var sqlfulldate = fulldate;
 									if(time<700){
-										sqlfulldate=sqlfulldate-1;
+										sqlfulldate=get_yesterday(sqlfulldate);
+										//console.log("thedate: "+sqlfulldate);
 										//find any bands that start before midnight and finish after current time
 										//if no results run new search where start time can be normal but sqlfulldate still -1
 										//sqlfulldate would/is already set to modified -1
@@ -455,7 +456,8 @@ function next_bands(txs,StageName,fulldate,time){
 	var sql = ""
 	sqlfulldate = fulldate;
 	if(time<700){
-			sqlfulldate=sqlfulldate-1;
+			sqlfulldate=get_yesterday(sqlfulldate);
+			//console.log("thedate: "+sqlfulldate);
 			sql = "select * from bands where day = "+sqlfulldate+" and start_time > "+time+" and start_time<700 and stage_rank='"+StageName+"' order by start_time ASC Limit 1";
 	}else{
 		sql = "select * from bands where day = "+fulldate+" and start_time > "+time+" and stage_rank='"+StageName+"' order by start_time ASC Limit 1";
@@ -471,9 +473,9 @@ function next_bands(txs,StageName,fulldate,time){
 							if(len == 0 ){
 							//if(time>700 && len == 0 ){
 								
-								var sqlfulldate2 = fulldate - 1;
+								
 									db.transaction(function (txs2) {
-										sql = "select * from bands where day = "+fulldate+" and start_time >"+time+" and stage_rank='"+StageName+"' order by start_time ASC Limit 1 ";
+										sql = "select * from bands where day = "+fulldate+" and start_time >"+time+" and start_time>700 and stage_rank='"+StageName+"' order by start_time ASC Limit 1 ";
 										txs2.executeSql(sql, [], function(txs, results){
 											var len = results.rows.length, i;
 											//console.log(len);
@@ -1453,6 +1455,54 @@ function lineup_content_az(BandRecord){
 
 	
 	return content;
+}
+
+function get_yesterday(today){
+	var yester;
+	var end = today.substring(6,8);
+	var days;
+	var year = today.substring(0,4);
+	if(end==01){
+		//month change.
+		var month = today.substring(4,6);
+		//only have festivals from june till august so run 05/06/07/08/09
+		switch(month) {
+			case "05":
+				//console.log("my month is"+month);
+				month=month-1;
+				//no. days in april
+				days=30;
+				break;
+			case "06":
+				month=month-1;
+				//no. days in may 
+				days=31;
+				break;
+			case "07":
+				month=month-1;
+				//no. days in june
+				days=30;
+				break;
+			case "08":
+				month=month-1;
+				//no. days in july
+				days=31;
+				break;
+			case "09":
+				month=month-1;
+				//no. days in august
+				days=31;
+				break;
+		}
+		//add precedding zero
+		month="0"+month;
+		yester = year+""+month+""+days;
+			
+	}else{
+		//no month change simply take 1 off
+		yester = today-1;
+	}
+	return yester;
 }
 
 function stage_panel_select_text(){
